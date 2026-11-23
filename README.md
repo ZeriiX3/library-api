@@ -45,6 +45,8 @@ docker run -p 8000:8000 -v library-data:/data library-api
 
 Le volume `library-data` conserve la base SQLite entre deux lancements du container.
 
+L'API est alors disponible sur http://127.0.0.1:8000, avec la documentation Swagger sur http://127.0.0.1:8000/docs.
+
 ## Utiliser l'API
 
 Le plus simple : ouvrir la documentation interactive Swagger sur http://127.0.0.1:8000/docs, choisir une route, cliquer sur **Try it out** puis **Execute**.
@@ -61,12 +63,12 @@ Exemple de corps pour `POST /books` :
 
 Réponse attendue : `201` avec le livre et son `id`. Un titre vide renvoie `422` (validation).
 
-En ligne de commande (PowerShell, `curl.exe` et non `curl`, qui est un alias de `Invoke-WebRequest`) :
+Test rapide (PowerShell : `curl.exe`, pas `curl`) :
 
 ```powershell
-curl.exe -i http://127.0.0.1:8000/health
-curl.exe http://127.0.0.1:8000/books
-curl.exe -i http://127.0.0.1:8000/books/999
+curl.exe http://127.0.0.1:8000/health         # {"status":"ok"}
+curl.exe http://127.0.0.1:8000/books          # [] (liste vide au départ)
+curl.exe -i http://127.0.0.1:8000/books/999   # HTTP 404 + {"detail":"Book not found"}
 ```
 
 ## Tests
@@ -75,7 +77,15 @@ curl.exe -i http://127.0.0.1:8000/books/999
 python -m pytest
 ```
 
-Les tests utilisent une base temporaire (`test.db`) et ne touchent pas à la vraie base.
+6 tests d'API (avec `TestClient`) :
+- `/health` répond `200`
+- ajout d'un livre : `201` avec un `id`
+- titre vide : `422`
+- liste des livres : `200`
+- détail d'un livre : `200`
+- id inexistant : `404`
+
+Ils utilisent une base temporaire (`test.db`), recréée avant chaque test, et ne touchent pas à la vraie base.
 
 ## CI/CD
 
