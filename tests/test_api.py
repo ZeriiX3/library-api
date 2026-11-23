@@ -1,7 +1,17 @@
+import os
 import pytest
-from fastapi.testclient import TestClient
 
-from app.main import app, books
+# Use a separate test database that must be set before importing the app
+os.environ["DATABASE_PATH"] = "test.db"
+
+
+from fastapi.testclient import TestClient
+from app.main import app
+from app.database import DATABASE_PATH, init_db
+
+
+# ---------------------------------------------------------------------------- #
+
 
 client = TestClient(app)
 
@@ -9,9 +19,11 @@ VALID_BOOK = {"title": "Les Misérables", "author": "Victor Hugo", "year": 1862}
 
 
 @pytest.fixture(autouse=True)
-def clear_books():
-    # Clear the books list before each test
-    books.clear()
+def fresh_database():
+    # Start every test with an empty database
+    if os.path.exists(DATABASE_PATH):
+        os.remove(DATABASE_PATH)
+    init_db()
 
 
 def test_health_check():
